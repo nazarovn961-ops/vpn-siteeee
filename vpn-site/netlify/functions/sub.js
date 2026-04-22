@@ -1,7 +1,45 @@
 export async function handler(event) {
   const config = [
     {
-      "remarks": "TEST VPN",
+      "dns": {
+        "servers": [
+          {
+            "address": "1.1.1.1",
+            "skipFallback": false
+          }
+        ],
+        "tag": "dns_out"
+      },
+      "inbounds": [
+        {
+          "listen": "127.0.0.1",
+          "port": 10808,
+          "protocol": "socks",
+          "settings": {
+            "auth": "noauth",
+            "udp": true,
+            "userLevel": 8
+          },
+          "sniffing": {
+            "destOverride": ["http", "tls"],
+            "enabled": true
+          },
+          "tag": "socks"
+        },
+        {
+          "listen": "127.0.0.1",
+          "port": 10809,
+          "protocol": "http",
+          "settings": {
+            "userLevel": 8
+          },
+          "tag": "http"
+        }
+      ],
+      "log": {
+        "dnsLog": false,
+        "loglevel": "warning"
+      },
       "outbounds": [
         {
           "protocol": "vless",
@@ -28,18 +66,47 @@ export async function handler(event) {
               "publicKey": "1vSZjvhZO01oAEH3b7eebR1qF5dLU1Dq2E7xu8pwGSs",
               "shortId": "428ef87fd47a3a32",
               "fingerprint": "chrome"
-            }
+            },
+            "tcpSettings": {}
           },
           "tag": "proxy"
+        },
+        {
+          "protocol": "freedom",
+          "tag": "direct"
+        },
+        {
+          "protocol": "blackhole",
+          "tag": "block"
         }
-      ]
+      ],
+      "remarks": "🇦🇹 TEST VPN",
+      "routing": {
+        "domainStrategy": "IPIfNonMatch",
+        "rules": [
+          {
+            "ip": [
+              "127.0.0.0/8",
+              "10.0.0.0/8",
+              "172.16.0.0/12",
+              "192.168.0.0/16",
+              "::1/128",
+              "fc00::/7",
+              "fe80::/10"
+            ],
+            "outboundTag": "direct",
+            "type": "field"
+          }
+        ]
+      },
+      "stats": {}
     }
   ];
 
   return {
     statusCode: 200,
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json; charset=utf-8"
     },
     body: JSON.stringify(config)
   };
