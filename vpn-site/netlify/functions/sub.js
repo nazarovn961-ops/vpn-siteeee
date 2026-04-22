@@ -1,71 +1,107 @@
-exports.handler = async function () {
-  const config = {
-    "dns": {
-      "servers": ["1.1.1.1"]
-    },
-    "inbounds": [
-      {
-        "listen": "127.0.0.1",
-        "port": 10808,
-        "protocol": "socks",
-        "settings": {
-          "auth": "noauth",
-          "udp": true
-        }
-      },
-      {
-        "listen": "127.0.0.1",
-        "port": 10809,
-        "protocol": "http",
-        "settings": {}
-      }
-    ],
-    "outbounds": [
-      {
-        "protocol": "vless",
-        "settings": {
-          "vnext": [
-            {
-              "address": "at.titun.su",
-              "port": 443,
-              "users": [
-                {
-                  "id": "a44a6111-be40-4a96-8947-cb82fe37723b",
-                  "encryption": "none",
-                  "flow": "xtls-rprx-vision"
-                }
-              ]
-            }
-          ]
-        },
-        "streamSettings": {
-          "network": "tcp",
-          "security": "reality",
-          "realitySettings": {
-            "serverName": "pogovorim.su",
-            "publicKey": "1vSZjvhZO01oAEH3b7eebR1qF5dLU1Dq2E7xu8pwGSs",
-            "shortId": "428ef87fd47a3a32",
-            "fingerprint": "chrome"
-          }
-        },
-        "tag": "proxy"
-      },
-      {
-        "protocol": "freedom",
-        "tag": "direct"
-      }
-    ],
-    "routing": {
-      "domainStrategy": "IPIfNonMatch",
-      "rules": []
-    }
-  };
+exports.handler = async function (event) {
+  try {
+    const key = event.queryStringParameters?.key;
 
-  return {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(config)
-  };
+    if (!key) {
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        body: JSON.stringify({
+          error: "no key"
+        })
+      };
+    }
+
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+    const configUrl = process.env.CONFIG_URL;
+
+    if (!supabaseUrl || !supabaseKey || !configUrl) {
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        body: JSON.stringify({
+          error: "env not set"
+        })
+      };
+    }
+
+    const userRes = await fetch(
+      `${supabaseUrl}/rest/v1/users?subscription_key=eq.${encodeURIComponent(key)}&select=telegram_id,subscription_key,status,expires_at`,
+      {
+        headers: {
+          "apikey": supabaseKey,
+          "Authorization": `Bearer ${supabaseKey}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    const users = await userRes.json();
+
+    if (!Array.isArray(users) || users.length === 0) {
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        body: JSON.stringify({
+          error: "no active access"
+        })
+      };
+    }
+
+    const user = users[0];
+
+    if (user.status !== "active") {
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        body: JSON.stringify({
+          error: "no active access"
+        })
+      };
+    }
+
+    if (!user.expires_at || new Date(user.expires_at) < new Date()) {
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        body: JSON.stringify({
+          error: "subscription expired"
+        })
+      };
+    }
+
+    const configRes = await fetch(configUrl);
+    const configText = await configRes.text();
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store"
+      },
+      body: configText
+    };
+  } catch (e) {
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      body: JSON.stringify({
+        error: "function error",
+        message: String(e)
+      })
+    };
+  }
 };
