@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "dns": {
       "queryStrategy": "IPIfNonMatch",
@@ -1853,20 +1853,9 @@
     },
     "stats": {}
   },
+
+
   {
-  "burstObservatory": {
-    "pingConfig": {
-      "connectivity": "",
-      "destination": "http://www.gstatic.com/generate_204",
-      "interval": "120s",
-      "sampling": 1,
-      "timeout": "3s"
-    },
-    "subjectSelector": [
-      "black",
-      "proxy"
-    ]
-  },
   "dns": {
     "queryStrategy": "IPIfNonMatch",
     "servers": [
