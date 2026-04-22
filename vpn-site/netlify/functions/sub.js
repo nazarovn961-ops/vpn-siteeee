@@ -1,14 +1,10 @@
-export async function handler(event) {
+exports.handler = async function () {
   const config = [
     {
       "dns": {
         "servers": [
-          {
-            "address": "1.1.1.1",
-            "skipFallback": false
-          }
-        ],
-        "tag": "dns_out"
+          "1.1.1.1"
+        ]
       },
       "inbounds": [
         {
@@ -17,12 +13,7 @@ export async function handler(event) {
           "protocol": "socks",
           "settings": {
             "auth": "noauth",
-            "udp": true,
-            "userLevel": 8
-          },
-          "sniffing": {
-            "destOverride": ["http", "tls"],
-            "enabled": true
+            "udp": true
           },
           "tag": "socks"
         },
@@ -30,16 +21,10 @@ export async function handler(event) {
           "listen": "127.0.0.1",
           "port": 10809,
           "protocol": "http",
-          "settings": {
-            "userLevel": 8
-          },
+          "settings": {},
           "tag": "http"
         }
       ],
-      "log": {
-        "dnsLog": false,
-        "loglevel": "warning"
-      },
       "outbounds": [
         {
           "protocol": "vless",
@@ -66,40 +51,20 @@ export async function handler(event) {
               "publicKey": "1vSZjvhZO01oAEH3b7eebR1qF5dLU1Dq2E7xu8pwGSs",
               "shortId": "428ef87fd47a3a32",
               "fingerprint": "chrome"
-            },
-            "tcpSettings": {}
+            }
           },
           "tag": "proxy"
         },
         {
           "protocol": "freedom",
           "tag": "direct"
-        },
-        {
-          "protocol": "blackhole",
-          "tag": "block"
         }
       ],
-      "remarks": "🇦🇹 TEST VPN",
       "routing": {
         "domainStrategy": "IPIfNonMatch",
-        "rules": [
-          {
-            "ip": [
-              "127.0.0.0/8",
-              "10.0.0.0/8",
-              "172.16.0.0/12",
-              "192.168.0.0/16",
-              "::1/128",
-              "fc00::/7",
-              "fe80::/10"
-            ],
-            "outboundTag": "direct",
-            "type": "field"
-          }
-        ]
+        "rules": []
       },
-      "stats": {}
+      "remarks": "TEST AUSTRIA"
     }
   ];
 
@@ -110,4 +75,4 @@ export async function handler(event) {
     },
     body: JSON.stringify(config)
   };
-}
+};
